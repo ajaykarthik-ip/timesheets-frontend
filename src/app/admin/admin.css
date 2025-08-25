@@ -161,23 +161,6 @@ body::before {
   display: none;
 }
 
-/* Enhanced glass effect for different nav items */
-.admin-nav a[href*="dashboard"] {
-  border-left: 2px solid rgba(0, 122, 255, 0.3);
-}
-
-.admin-nav a[href*="users"] {
-  border-left: 2px solid rgba(52, 199, 89, 0.3);
-}
-
-.admin-nav a[href*="reports"] {
-  border-left: 2px solid rgba(255, 159, 10, 0.3);
-}
-
-.admin-nav a[href*="settings"] {
-  border-left: 2px solid rgba(255, 69, 58, 0.3);
-}
-
 /* Smooth scroll behavior */
 .admin-nav {
   scroll-behavior: smooth;

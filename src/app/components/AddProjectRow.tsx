@@ -38,6 +38,7 @@ export default function AddProjectRow({
 
     onAddRow(selectedProject, selectedActivity);
     
+    // Reset form
     setSelectedProject('');
     setSelectedActivity('');
     setShowAddRow(false);
@@ -53,78 +54,42 @@ export default function AddProjectRow({
     return (
       <div className="add-row-section">
         <button 
-          onClick={() => setShowAddRow(true)} 
-          className="modern-add-btn"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.8) 0%, rgba(88, 86, 214, 0.8) 100%)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
-            padding: '14px 24px',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: 'white',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
-            letterSpacing: '-0.01em',
-            marginBottom: '16px',
-            minWidth: 'auto',
-            width: 'fit-content'
-          }}
-          onMouseEnter={(e) => {
-            const target = e.target as HTMLElement;
-            target.style.transform = 'translateY(-2px)';
-            target.style.boxShadow = '0 8px 25px rgba(0, 122, 255, 0.35)';
-            target.style.background = 'linear-gradient(135deg, rgba(0, 122, 255, 0.9) 0%, rgba(88, 86, 214, 0.9) 100%)';
-          }}
-          onMouseLeave={(e) => {
-            const target = e.target as HTMLElement;
-            target.style.transform = 'translateY(0)';
-            target.style.boxShadow = '0 4px 20px rgba(0, 122, 255, 0.25)';
-            target.style.background = 'linear-gradient(135deg, rgba(0, 122, 255, 0.8) 0%, rgba(88, 86, 214, 0.8) 100%)';
-          }}
-          onMouseDown={(e) => {
-            const target = e.target as HTMLElement;
-            target.style.transform = 'translateY(0) scale(0.98)';
-          }}
-          onMouseUp={(e) => {
-            const target = e.target as HTMLElement;
-            target.style.transform = 'translateY(-2px) scale(1)';
-          }}
-        >
-          <span style={{
-            fontSize: '16px',
-            lineHeight: '1',
-            fontWeight: 'bold'
-          }}>+</span>
+            onClick={() => setShowAddRow(true)} 
+            className="modern-add-btn"
+            style={{
+              outline: 'none',
+              background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.8) 0%, rgba(88, 86, 214, 0.8) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '12px',
+              padding: '14px 24px',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'white',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif',
+              letterSpacing: '-0.01em',
+              marginBottom: '16px',
+              minWidth: 'auto',
+              width: 'fit-content',
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 122, 255, 0.4)'}
+            onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
+          >
           Add Project Activity
-        </button>
+          </button>
       </div>
     );
   }
 
   return (
     <div className="add-row-section">
-      <div 
-        className="add-row-form"
-        style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '12px',
-          padding: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '16px',
-          flexWrap: 'wrap'
-        }}
-      >
+      <div className="add-row-form">
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
