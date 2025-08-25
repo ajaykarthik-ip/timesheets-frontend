@@ -55,18 +55,18 @@ export default function AddProjectRow({
       <div className="add-row-section">
         <button 
             onClick={() => setShowAddRow(true)} 
-            className="modern-add-btn"
+            className="subtle-add-btn"
             style={{
               outline: 'none',
-              background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.8) 0%, rgba(88, 86, 214, 0.8) 100%)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '12px',
-              padding: '14px 24px',
+              borderRadius: '8px',
+              padding: '10px 16px',
               fontSize: '14px',
-              fontWeight: '600',
-              color: 'white',
+              fontWeight: '500',
+              color: 'rgba(255, 255, 255, 0.9)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -76,9 +76,10 @@ export default function AddProjectRow({
               marginBottom: '16px',
               minWidth: 'auto',
               width: 'fit-content',
-              transition: 'all 0.2s ease-in-out'
+              transition: 'all 0.2s ease-in-out',
+              height: '40px'
             }}
-            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 122, 255, 0.4)'}
+            onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.1)'}
             onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
           >
           Add Project Activity
@@ -147,13 +148,15 @@ export default function AddProjectRow({
           disabled={!selectedProject || !selectedActivity}
           style={{
             background: (!selectedProject || !selectedActivity) 
-              ? 'rgba(255, 255, 255, 0.1)' 
-              : 'rgba(52, 199, 89, 0.8)',
-            backdropFilter: 'blur(20px)',
+              ? 'rgba(255, 255, 255, 0.03)' 
+              : 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(10px)',
             border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '8px',
             padding: '10px 16px',
-            color: 'white',
+            color: (!selectedProject || !selectedActivity) 
+              ? 'rgba(255, 255, 255, 0.5)' 
+              : 'rgba(255, 255, 255, 0.9)',
             fontSize: '14px',
             fontWeight: '500',
             cursor: (!selectedProject || !selectedActivity) ? 'not-allowed' : 'pointer',
@@ -167,9 +170,9 @@ export default function AddProjectRow({
         <button
           onClick={handleCancel}
           style={{
-            background: 'rgba(255, 59, 48, 0.15)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 59, 48, 0.3)',
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
             borderRadius: '8px',
             padding: '10px 16px',
             color: 'rgba(255, 255, 255, 0.9)',
