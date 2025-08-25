@@ -94,7 +94,6 @@ export default function AdminUsers() {
     loadCurrentUser();
   }, []);
 
-  // ✅ CORRECTED: Fetch users using the correct endpoint
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -146,7 +145,7 @@ export default function AdminUsers() {
       user.designation?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ CORRECTED: Form submit with proper endpoints
+  //  CORRECTED: Form submit with proper endpoints
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -232,7 +231,7 @@ export default function AdminUsers() {
     setSuccess('');
   };
 
-  // ✅ CORRECTED: Delete user using proper endpoint
+  //  CORRECTED: Delete user using proper endpoint
   const handleDelete = async (user: User) => {
     if (user.id === currentUser?.id) {
       setError('Cannot delete your own account');
@@ -265,7 +264,7 @@ export default function AdminUsers() {
     }
   };
 
-  // ✅ ADDED: Toggle user status (if you want to implement this)
+  //  ADDED: Toggle user status (if you want to implement this)
   const handleToggleStatus = async (user: User) => {
     const action = user.is_active ? 'deactivate' : 'activate';
     

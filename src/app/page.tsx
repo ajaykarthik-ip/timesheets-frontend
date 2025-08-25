@@ -23,7 +23,6 @@ import {
 } from './utils/api';
 
 export default function MainPage() {
-  // State
   const [user, setUser] = useState<User | null>(null);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);

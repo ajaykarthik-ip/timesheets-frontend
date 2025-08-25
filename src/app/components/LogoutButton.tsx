@@ -5,8 +5,6 @@ import { useAuth } from '../context/AuthContext';
 export default function LogoutButton() {
   const { logout, user } = useAuth();
 
-  // Debug logging
-  console.log('🔍 LogoutButton - Rendering, user:', user);
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
@@ -14,7 +12,6 @@ export default function LogoutButton() {
     }
   };
 
-  // Always render the button, regardless of user state
   return (
     <div 
       className="logout-section"

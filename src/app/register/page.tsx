@@ -13,7 +13,6 @@ export default function RegisterPage() {
   const router = useRouter();
   const { login } = useAuth();
   
-  // ✅ FIXED: Removed designation field
   const [formData, setFormData] = useState({
     email: '',
     first_name: '',
@@ -55,16 +54,13 @@ export default function RegisterPage() {
     }
 
     try {
-      // ✅ FIXED: Prepare data without designation
       const registrationData = {
         email: formData.email,
         first_name: formData.first_name,
         last_name: formData.last_name,
         password: formData.password
-        // Removed designation and password_confirm
       };
 
-      console.log('📝 Register: Sending data:', { ...registrationData, password: '[HIDDEN]' });
 
       const response = await fetch(`${API_BASE}/auth/register/`, {
         method: 'POST',
@@ -75,11 +71,9 @@ export default function RegisterPage() {
       });
 
       const data = await response.json();
-      console.log('📡 Register: Response:', data);
 
       if (response.ok) {
         setSuccess('Account created successfully! You can now sign in.');
-        console.log('✅ Registration successful:', data);
         
         // Clear form
         setFormData({
@@ -90,12 +84,10 @@ export default function RegisterPage() {
           password_confirm: ''
         });
         
-        // Redirect to login after 2 seconds
         setTimeout(() => {
           router.push('/login');
         }, 2000);
       } else {
-        console.log('❌ Registration failed:', data);
         
         if (data.error) {
           setError(data.error);

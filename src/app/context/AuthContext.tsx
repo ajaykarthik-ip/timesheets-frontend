@@ -50,11 +50,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log('🔍 AuthContext: Checking authentication...');
         const token = localStorage.getItem("access_token");
         
         if (!token) {
-          console.log('❌ AuthContext: No token found');
           setLoading(false);
           return;
         }
@@ -63,15 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ AuthContext: User is authenticated:', data.user);
           setUser(data.user);
         } else {
-          console.log('❌ AuthContext: Token invalid, clearing storage');
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
       } catch (error) {
-        console.log('❌ AuthContext: Auth check failed:', error);
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
       } finally {
@@ -84,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('🔑 AuthContext: Attempting login for:', email);
       
       const response = await fetch(`${API_BASE}/auth/login/`, {
         method: 'POST',
@@ -97,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('✅ AuthContext: Login successful');
         
         // Store JWT tokens
         localStorage.setItem("access_token", data.access);
@@ -108,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         return { success: true };
       } else {
-        console.log('❌ AuthContext: Login failed:', data.error);
         return { success: false, error: data.error || 'Login failed' };
       }
     } catch (error) {
@@ -119,14 +111,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      console.log('🚪 AuthContext: Logging out...');
       
       // Try to call logout endpoint (optional since we're using JWT)
       await makeAPICall(`${API_BASE}/auth/logout/`, {
         method: 'POST',
       });
       
-      console.log('✅ AuthContext: Logout successful');
     } catch (error) {
       console.error('❌ AuthContext: Logout error:', error);
     } finally {

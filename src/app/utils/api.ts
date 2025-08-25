@@ -1,4 +1,3 @@
-// Type definitions
 export interface User {
   id: number;
   email: string;

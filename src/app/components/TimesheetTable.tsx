@@ -55,7 +55,6 @@ export default function TimesheetTable({
 
   return (
     <div>
-      {/* Timesheet Table */}
       <div className="table-container">
         <table>
           <thead>

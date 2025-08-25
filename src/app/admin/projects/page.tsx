@@ -20,7 +20,7 @@ interface ProjectChoices {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
-// ✅ JWT API helper
+// JWT API helper
 const makeAPICall = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('access_token');
   
@@ -58,7 +58,7 @@ export default function AdminProjects() {
     activity_types_list: [] as string[]
   });
 
-  // ✅ Fetch projects
+  // Fetch projects
   const fetchProjects = useCallback(async () => {
     try {
       const response = await makeAPICall(`${API_BASE}/projects/`);
@@ -71,7 +71,7 @@ export default function AdminProjects() {
     }
   }, []);
 
-  // ✅ Fetch choices
+  // Fetch choices
   const fetchChoices = useCallback(async () => {
     try {
       const response = await makeAPICall(`${API_BASE}/projects/choices/`);
@@ -94,7 +94,7 @@ export default function AdminProjects() {
     loadData();
   }, [fetchProjects, fetchChoices]);
 
-  // ✅ Load current user
+  // Load current user
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -114,7 +114,7 @@ export default function AdminProjects() {
     project.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ Handle submit
+  // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

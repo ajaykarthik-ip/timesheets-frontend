@@ -38,7 +38,6 @@ export default function AddProjectRow({
 
     onAddRow(selectedProject, selectedActivity);
     
-    // Reset form
     setSelectedProject('');
     setSelectedActivity('');
     setShowAddRow(false);

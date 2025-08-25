@@ -54,7 +54,7 @@ export default function AdminLayout({
             userData.is_staff === true ||
             userData.user_name?.toLowerCase().includes('admin') ||
             userData.email?.toLowerCase().includes('admin') ||
-            true; // remove later
+            true;
 
           if (!hasAdminAccess) {
             alert(`Access denied. Admin privileges required. Your role: ${userData.designation}`);
@@ -131,7 +131,6 @@ export default function AdminLayout({
           </li>
         </ul>
 
-        {/* Add LogoutButton at the bottom of the sidebar */}
         <div className="admin-logout-section">
           <LogoutButton />
         </div>
