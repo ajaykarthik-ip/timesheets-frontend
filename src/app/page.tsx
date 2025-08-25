@@ -23,6 +23,7 @@ import {
 } from './utils/api';
 
 export default function MainPage() {
+  // State
   const [user, setUser] = useState<User | null>(null);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -83,6 +84,16 @@ export default function MainPage() {
     
     return groups;
   }, [timesheets, manuallyAddedRows]);
+
+  // Calculate total hours for validation
+  const getTotalHours = useCallback((): number => {
+    return Object.keys(tableData).reduce((sum, key) => {
+      const rowSum = Object.values(tableData[key]).reduce((rowTotal, hours) => {
+        return rowTotal + parseFloat(hours || '0');
+      }, 0);
+      return sum + rowSum;
+    }, 0);
+  }, [tableData]);
 
   // Data loading
   const loadData = useCallback(async () => {
@@ -353,13 +364,25 @@ export default function MainPage() {
 
   const submitWeek = async () => {
     const draftTimesheets = timesheets.filter(ts => ts.status === 'draft');
+    const totalHours = getTotalHours();
+    const minimumHours = 40;
     
     if (!draftTimesheets.length) {
       showNotification('No draft timesheets to submit', 'error');
       return;
     }
 
-    if (!confirm(`Submit ${draftTimesheets.length} draft timesheet(s) for this week?`)) {
+    // Check minimum hours requirement
+    if (totalHours < minimumHours) {
+      const hoursShort = minimumHours - totalHours;
+      showNotification(
+        `Cannot submit: You need ${hoursShort.toFixed(1)} more hours to meet the minimum requirement of ${minimumHours}h per week.`,
+        'error'
+      );
+      return;
+    }
+
+    if (!confirm(`Submit ${draftTimesheets.length} draft timesheet(s) for this week? (Total: ${totalHours.toFixed(1)}h)`)) {
       return;
     }
 
@@ -370,13 +393,14 @@ export default function MainPage() {
       const data = await response.json();
 
       if (response.ok) {
-        showNotification(`Week submitted successfully! ${data.submitted_count} timesheets processed.`);
+        showNotification(`Week submitted successfully! ${data.submitted_count} timesheets processed. (Total: ${totalHours.toFixed(1)}h)`);
         await refreshTimesheets();
       } else if (data.can_force_submit) {
         const warningMessage = [
           'There are warnings with this submission:',
           ...(data.week_warnings || []),
           '',
+          `Total hours: ${totalHours.toFixed(1)}h`,
           'Do you want to submit anyway?'
         ].join('\n');
 
@@ -385,7 +409,7 @@ export default function MainPage() {
           
           if (forceResponse.ok) {
             const forceData = await forceResponse.json();
-            showNotification(`Week submitted with warnings! ${forceData.submitted_count} timesheets processed.`);
+            showNotification(`Week submitted with warnings! ${forceData.submitted_count} timesheets processed. (Total: ${totalHours.toFixed(1)}h)`);
             await refreshTimesheets();
           } else {
             const errorData = await forceResponse.json();

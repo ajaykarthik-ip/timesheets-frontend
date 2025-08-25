@@ -1,5 +1,3 @@
-// Update your TimesheetTable.tsx component
-
 "use client";
 
 import React, { useState } from 'react';
@@ -105,21 +103,7 @@ export default function TimesheetTable({
 
   return (
     <div>
-      {/* Status Legend */}
-      <div className="status-legend">
-        <div className="legend-item">
-          <div className="legend-dot submitted"></div>
-          <span>Submitted</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-dot draft"></div>
-          <span>Draft/Unsubmitted</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-dot empty"></div>
-          <span>Empty</span>
-        </div>
-      </div>
+
 
       {/* Timesheet Table */}
       <div className="table-container">
