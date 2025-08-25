@@ -480,6 +480,130 @@ select option {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Hide spinner controls for number inputs */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Add these styles to your page.css file */
+
+/* Status indicator styles */
+.time-input {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+/* Green background for submitted entries */
+.time-input.submitted {
+    background: rgba(52, 199, 89, 0.15) !important;
+    border-color: rgba(52, 199, 89, 0.4) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.time-input.submitted:focus {
+    background: rgba(52, 199, 89, 0.2) !important;
+    border-color: rgba(52, 199, 89, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.3) !important;
+}
+
+/* Red background for draft/unsubmitted entries with values */
+.time-input.draft {
+    background: rgba(255, 69, 58, 0.15) !important;
+    border-color: rgba(255, 69, 58, 0.4) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.time-input.draft:focus {
+    background: rgba(255, 69, 58, 0.2) !important;
+    border-color: rgba(255, 69, 58, 0.6) !important;
+    box-shadow: 0 0 0 2px rgba(255, 69, 58, 0.3) !important;
+}
+
+/* Empty inputs (no special styling) */
+.time-input.empty {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.time-input.empty:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(0, 122, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+}
+
+/* Status indicators in table cells */
+.table-cell-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    pointer-events: none;
+}
+
+.status-dot.submitted {
+    background: rgba(52, 199, 89, 0.8);
+    box-shadow: 0 0 4px rgba(52, 199, 89, 0.6);
+}
+
+.status-dot.draft {
+    background: rgba(255, 69, 58, 0.8);
+    box-shadow: 0 0 4px rgba(255, 69, 58, 0.6);
+}
+
+/* Row status indicators */
+.project-cell.has-submitted,
+.activity-cell.has-submitted {
+    border-left: 3px solid rgba(52, 199, 89, 0.6);
+    background: rgba(52, 199, 89, 0.05);
+}
+
+.project-cell.has-draft,
+.activity-cell.has-draft {
+    border-left: 3px solid rgba(255, 69, 58, 0.6);
+    background: rgba(255, 69, 58, 0.05);
+}
+
+/* Status legend */
+.status-legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.time-input.submitted::after {
+    content: "✓";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    color: rgba(52, 199, 89, 0.8);
+    pointer-events: none;
+}
+
+
 
 @media (max-width: 768px) {
     .main {

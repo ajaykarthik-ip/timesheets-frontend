@@ -1,3 +1,5 @@
+// Update your TimesheetTable.tsx component
+
 "use client";
 
 import React, { useState } from 'react';
@@ -37,17 +39,65 @@ export default function TimesheetTable({
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hasData = Object.keys(groupedProjectActivities).length > 0 || Object.keys(tableData).length > 0;
 
+  // Helper function to get timesheet status for a specific cell
+  const getTimesheetStatus = (projectName: string, activityType: string, date: string) => {
+    const timesheet = timesheets.find(ts =>
+      ts.project_name === projectName &&
+      ts.activity_type === activityType &&
+      ts.date === date
+    );
+    return timesheet?.status || null;
+  };
+
+  // Helper function to get cell status class
+  const getCellStatusClass = (projectName: string, activityType: string, date: string, value: string) => {
+    const status = getTimesheetStatus(projectName, activityType, date);
+    
+    if (!value || value === '' || parseFloat(value) === 0) {
+      return 'empty';
+    }
+    
+    if (status === 'submitted') {
+      return 'submitted';
+    }
+    
+    if (status === 'draft' || (!status && value && parseFloat(value) > 0)) {
+      return 'draft';
+    }
+    
+    return 'empty';
+  };
+
+  // Helper function to check if a row has submitted entries
+  const getRowStatus = (projectName: string, activityType: string) => {
+    const hasSubmitted = timesheets.some(ts =>
+      ts.project_name === projectName &&
+      ts.activity_type === activityType &&
+      ts.status === 'submitted'
+    );
+    
+    const hasDraft = timesheets.some(ts =>
+      ts.project_name === projectName &&
+      ts.activity_type === activityType &&
+      ts.status === 'draft'
+    );
+    
+    if (hasSubmitted) return 'has-submitted';
+    if (hasDraft) return 'has-draft';
+    return '';
+  };
+
   const getDayTotal = (date: string): number => {
     return Object.keys(tableData).reduce((sum, key) => {
-      const hours = parseFloat(tableData[key][date] || '0');
-      return sum + hours;
+      const hours = tableData[key][date];
+      return sum + (hours && hours !== '' ? parseFloat(hours) : 0);
     }, 0);
   };
 
   const getGrandTotal = (): number => {
     return Object.keys(tableData).reduce((sum, key) => {
       const rowSum = Object.values(tableData[key]).reduce((rowTotal, hours) => {
-        return rowTotal + parseFloat(hours || '0');
+        return rowTotal + (hours && hours !== '' ? parseFloat(hours) : 0);
       }, 0);
       return sum + rowSum;
     }, 0);
@@ -55,6 +105,23 @@ export default function TimesheetTable({
 
   return (
     <div>
+      {/* Status Legend */}
+      <div className="status-legend">
+        <div className="legend-item">
+          <div className="legend-dot submitted"></div>
+          <span>Submitted</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-dot draft"></div>
+          <span>Draft/Unsubmitted</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-dot empty"></div>
+          <span>Empty</span>
+        </div>
+      </div>
+
+      {/* Timesheet Table */}
       <div className="table-container">
         <table>
           <thead>
@@ -84,50 +151,58 @@ export default function TimesheetTable({
                       ts.status === 'submitted'
                     );
 
+                    const rowStatus = getRowStatus(projectName, activityType);
+
                     return (
                       <tr key={key}>
                         {index === 0 && (
                           <td 
                             rowSpan={activities.length} 
-                            className="project-cell"
+                            className={`project-cell ${rowStatus}`}
                           >
                             {projectName}
                           </td>
                         )}
                         
-                        <td className="activity-cell">
+                        <td className={`activity-cell ${rowStatus}`}>
                           {activityType}
                         </td>
 
-                        {weekDates.map(date => (
-                          <td key={date}>
-                            <input
-                              type="number"
-                              value={tableData[key]?.[date] || '0'}
-                              min="0"
-                              max="24"
-                              step="0.5"
-                              onChange={(e) => onCellChange(
-                                projectName,
-                                activityType,
-                                date,
-                                e.target.value
-                              )}
-                              onFocus={() => setEditingCell({
-                                project: projectName,
-                                activity: activityType,
-                                date: date
-                              })}
-                              onBlur={() => setEditingCell(null)}
-                              disabled={hasSubmittedEntries}
-                              className={`time-input ${
-                                editingCell?.project === projectName &&
-                                editingCell?.activity === activityType &&
-                                editingCell?.date === date ? 'editing' : ''
-                              } ${hasSubmittedEntries ? 'submitted' : ''}`}
-                            />
-                          </td>
-                        ))}
+                        {weekDates.map(date => {
+                          const cellValue = tableData[key]?.[date] || '';
+                          const statusClass = getCellStatusClass(projectName, activityType, date, cellValue);
+
+                          return (
+                            <td key={date}>
+                              <input
+                                type="number"
+                                value={cellValue}
+                                // placeholder="0"
+                                min="0"
+                                max="24"
+                                step="0.5"
+                                onChange={(e) => onCellChange(
+                                  projectName,
+                                  activityType,
+                                  date,
+                                  e.target.value
+                                )}
+                                onFocus={() => setEditingCell({
+                                  project: projectName,
+                                  activity: activityType,
+                                  date: date
+                                })}
+                                onBlur={() => setEditingCell(null)}
+                                disabled={hasSubmittedEntries}
+                                className={`time-input ${statusClass} ${
+                                  editingCell?.project === projectName &&
+                                  editingCell?.activity === activityType &&
+                                  editingCell?.date === date ? 'editing' : ''
+                                }`}
+                              />
+                            </td>
+                          );
+                        })}
                       </tr>
                     );
                   })}

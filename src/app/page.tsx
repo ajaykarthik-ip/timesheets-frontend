@@ -150,7 +150,7 @@ export default function MainPage() {
       .forEach(({ key }) => {
         data[key] = {};
         weekDates.forEach(date => {
-          data[key][date] = '0';
+          data[key][date] = '';
         });
       });
 
@@ -160,7 +160,7 @@ export default function MainPage() {
       if (!data[key]) {
         data[key] = {};
         weekDates.forEach(date => {
-          data[key][date] = '0';
+          data[key][date] = '';
         });
       }
       data[key][timesheet.date] = timesheet.hours_worked;
