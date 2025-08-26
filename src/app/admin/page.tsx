@@ -338,9 +338,6 @@ export default function AdminDashboard() {
               ))}
             </select>
           </div>
-        </div>
-
-        <div className="form-row">
           <div className="form-group">
             <label>Date From:</label>
             <input
