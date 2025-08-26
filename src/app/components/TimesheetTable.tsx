@@ -34,7 +34,6 @@ export default function TimesheetTable({
   saving,
   onSubmitWeek
 }: TimesheetTableProps) {
-  const [editingCell, setEditingCell] = useState<{project: string, activity: string, date: string} | null>(null);
   // Removed unused setCellValues
   const [cellValues] = useState<{[key: string]: string}>({});
 
@@ -307,12 +306,8 @@ export default function TimesheetTable({
                               max="24"
                               step="0.5"
                               onChange={(e) => handleCellChange(projectName, activityType, date, e.target.value)}
-                              onFocus={() => setEditingCell({
-                                project: projectName,
-                                activity: activityType,
-                                date: date
-                              })}
-                              onBlur={() => setEditingCell(null)}
+                              onFocus={() => {}}
+                              onBlur={() => {}}
                               disabled={!isEditable}
                               style={cellStyle}
                             />

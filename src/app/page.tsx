@@ -48,7 +48,6 @@ export default function MainPage() {
 
   const groupedProjectActivities = useMemo(() => {
     const groups: {[key: string]: {activityType: string, key: string}[]} = {};
-    const newRowKeys: string[] = [];
     
     // First, collect all unique keys from both sources
     const allKeys = new Set<string>();
@@ -121,7 +120,7 @@ export default function MainPage() {
         try {
           const userData = await loadUserData();
           setUser(userData);
-        } catch (userError) {
+        } catch (_userError) {
           window.location.href = '/login';
           return;
         }
@@ -141,7 +140,7 @@ export default function MainPage() {
         setTimesheets(timesheetData.value);
       }
 
-    } catch (error) {
+    } catch (_error) {
       showNotification('Failed to load data. Please try refreshing the page.', 'error');
     } finally {
       setLoading(false);
@@ -345,37 +344,6 @@ export default function MainPage() {
     showNotification(`Added ${projectName} - ${activityType} row`);
   };
 
-  const removeRow = (projectName: string, activityType: string) => {
-    const key = `${projectName}-${activityType}`;
-    
-    if (!confirm(`Remove ${projectName} - ${activityType} row?`)) {
-      return;
-    }
-
-    // Remove from manually added rows
-    setManuallyAddedRows(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(key);
-      return newSet;
-    });
-
-    // Remove from table data
-    setTableData(prev => {
-      const newData = { ...prev };
-      delete newData[key];
-      return newData;
-    });
-
-    // Remove from stable order
-    stableRowOrder.current = stableRowOrder.current.filter(orderKey => orderKey !== key);
-
-    // Delete any existing timesheets for this row
-    weekDates.forEach(date => {
-      deleteTimesheet(projectName, activityType, date);
-    });
-
-    showNotification(`Removed ${projectName} - ${activityType} row`);
-  };
 
   const submitWeek = async () => {
     const draftTimesheets = timesheets.filter(ts => ts.status === 'draft');

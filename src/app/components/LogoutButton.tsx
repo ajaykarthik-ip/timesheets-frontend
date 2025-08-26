@@ -3,7 +3,7 @@
 import { useAuth } from '../context/AuthContext';
 
 export default function LogoutButton() {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
 
 
   const handleLogout = () => {
