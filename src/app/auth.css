@@ -410,21 +410,7 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
 
-.form-row .form-group input {
-  height: 28px;
-  padding: 0 6px;
-  font-size: 11px;
-}
-
-/* Add this to your auth.css file */
-
-/* Remove autofill background and maintain your design */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
