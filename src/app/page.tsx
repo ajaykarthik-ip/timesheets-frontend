@@ -510,6 +510,8 @@ export default function MainPage() {
             currentWeek={formatWeekHeader(dateRange.dateFrom, dateRange.dateTo)}
             onNavigateWeek={navigateWeek}
           />
+
+
           
           {/* Floating Toast Notifications */}
           {error && (
