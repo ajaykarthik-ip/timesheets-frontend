@@ -445,8 +445,183 @@
 .form-row {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
   align-items: end;
+  /* margin-bottom: 16px; */
+}
+
+/* Modal specific form styling */
+.modal .form-row {
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+
+.modal .form-group {
+  margin-bottom: 14px;
+}
+
+.modal .form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 12px !important;
+}
+
+.modal .form-group input,
+.modal .form-group select,
+.modal .form-group textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  height: 36px;
+}
+
+.modal .form-group input:focus,
+.modal .form-group select:focus,
+.modal .form-group textarea:focus {
+  border-color: rgba(0, 122, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.modal .form-group textarea {
+  height: auto;
+  min-height: 70px;
+  resize: vertical;
+}
+
+.modal .form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Better dropdown styling */
+.modal .form-group select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.modal .form-group select option {
+  background: rgba(20, 20, 30, 0.98) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  padding: 8px 12px;
+  border: none;
+}
+
+.modal .form-group select option:hover {
+  background: rgba(0, 122, 255, 0.3) !important;
+  color: white !important;
+}
+
+.modal .form-group select option:checked {
+  background: rgba(0, 122, 255, 0.5) !important;
+  color: white !important;
+}
+
+/* Checkbox styling in modals */
+.inline-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.inline-checkbox input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  accent-color: rgba(0, 122, 255, 0.8);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.inline-checkbox label {
+  margin: 0 !important;
+  line-height: 16px !important;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Checkbox labels for permissions */
+.checkbox-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  margin: 0 0 8px 0 !important;
+  line-height: 1 !important;
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  accent-color: rgba(0, 122, 255, 0.8) !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
+}
+
+.permissions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Help text styling */
+.help-text {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 11px !important;
+  margin-top: 2px;
+  display: block;
+  font-style: italic;
+}
+
+/* Activity row styling */
+.activity-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.activity-input {
+  flex: 1;
+}
+
+.btn-small {
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  height: 28px;
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Modals */
@@ -462,18 +637,21 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .modal-content {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
-  padding: 20px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  padding: 16px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 85vh;
   overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header {
@@ -482,6 +660,7 @@
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header h2 {
@@ -489,12 +668,13 @@
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .close-btn {
   background: rgba(255, 255, 255, 0.1);
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.7);
   width: 24px;
@@ -504,6 +684,7 @@
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s ease;
+  line-height: 1;
 }
 
 .close-btn:hover {
@@ -777,4 +958,57 @@
 
 .admin-user-info p:last-child {
   margin-bottom: 0 !important;
+}
+
+/* Responsive Design for Modals */
+@media (max-width: 768px) {
+  .modal {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .modal-content {
+    padding: 14px;
+    max-width: 95vw;
+    max-height: 90vh;
+  }
+  
+  .modal .form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .modal .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .activity-row {
+    flex-direction: row;
+    gap: 6px;
+  }
+  
+  .activity-row .btn-small {
+    flex-shrink: 0;
+  }
+  
+  .form-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  
+  .form-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .modal-header h2 {
+    font-size: 15px;
+  }
+  
+  .modal-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
 }

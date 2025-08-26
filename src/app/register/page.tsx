@@ -111,7 +111,9 @@ export default function RegisterPage() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <div className="logo">Create Account</div>
+          <div className="logo">Mobiux Timesheet</div>
+            <p>Create your account</p>
+
         </div>
 
         {error && (
