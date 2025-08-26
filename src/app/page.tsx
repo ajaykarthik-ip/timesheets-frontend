@@ -38,6 +38,9 @@ export default function MainPage() {
   
   // Refs to prevent infinite loops
   const previousWeekKey = useRef<string>('');
+  
+  // Stable reference for row ordering - this prevents jumping
+  const stableRowOrder = useRef<string[]>([]);
 
   // Computed values
   const dateRange = useMemo(() => getWeekDateRange(currentDate), [currentDate]);
@@ -45,26 +48,36 @@ export default function MainPage() {
 
   const groupedProjectActivities = useMemo(() => {
     const groups: {[key: string]: {activityType: string, key: string}[]} = {};
+    const newRowKeys: string[] = [];
     
-    // Add timesheet entries
+    // First, collect all unique keys from both sources
+    const allKeys = new Set<string>();
+    
+    // Add keys from existing timesheets
     timesheets.forEach(entry => {
-      if (!groups[entry.project_name]) {
-        groups[entry.project_name] = [];
-      }
-      
       const key = `${entry.project_name}-${entry.activity_type}`;
-      const exists = groups[entry.project_name].find(item => item.key === key);
-      
-      if (!exists) {
-        groups[entry.project_name].push({
-          activityType: entry.activity_type,
-          key
-        });
-      }
+      allKeys.add(key);
     });
-
-    // Add manually added rows for the current week
+    
+    // Add keys from manually added rows
     manuallyAddedRows.forEach(key => {
+      allKeys.add(key);
+    });
+    
+    // Convert to array and maintain order based on existing stable order
+    const currentKeys = Array.from(allKeys);
+    
+    // Create new order: existing stable order first, then new keys
+    const orderedKeys = [
+      ...stableRowOrder.current.filter(key => currentKeys.includes(key)),
+      ...currentKeys.filter(key => !stableRowOrder.current.includes(key))
+    ];
+    
+    // Update stable order reference
+    stableRowOrder.current = orderedKeys;
+    
+    // Build groups in the stable order
+    orderedKeys.forEach(key => {
       const parts = key.split('-');
       const projectName = parts[0];
       const activityType = parts.slice(1).join('-');
@@ -73,13 +86,10 @@ export default function MainPage() {
         groups[projectName] = [];
       }
       
-      const exists = groups[projectName].find(item => item.key === key);
-      if (!exists) {
-        groups[projectName].push({
-          activityType,
-          key
-        });
-      }
+      groups[projectName].push({
+        activityType,
+        key
+      });
     });
     
     return groups;
@@ -188,6 +198,8 @@ export default function MainPage() {
       // Week has changed, reset manually added rows and table data
       setManuallyAddedRows(new Set());
       setTableData({});
+      // Reset stable row order for new week
+      stableRowOrder.current = [];
     }
     
     previousWeekKey.current = currentWeekKey;
@@ -354,6 +366,9 @@ export default function MainPage() {
       return newData;
     });
 
+    // Remove from stable order
+    stableRowOrder.current = stableRowOrder.current.filter(orderKey => orderKey !== key);
+
     // Delete any existing timesheets for this row
     weekDates.forEach(date => {
       deleteTimesheet(projectName, activityType, date);
@@ -442,7 +457,7 @@ export default function MainPage() {
     setTimeout(() => {
       setSuccess('');
       setError('');
-    }, 3000);
+    }, 2000); // Reduced to 2 seconds for floating notifications
   };
 
   // Loading and error states
@@ -496,12 +511,52 @@ export default function MainPage() {
             onNavigateWeek={navigateWeek}
           />
 
-          {/* Notifications */}
+          {/* Floating Toast Notifications */}
           {error && (
-            <div className="notification error">{error}</div>
+            <div style={{
+              position: 'fixed',
+              top: '16px',
+              right: '16px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: '#dc2626',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              zIndex: 9999,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              maxWidth: '280px',
+              minWidth: '120px',
+              animation: 'slideInFromRight 0.5s ease-out forwards, fadeOut 0.5s ease-in 2.5s forwards'
+            }}>
+              {error}
+            </div>
           )}
           {success && (
-            <div className="notification success">{success}</div>
+            <div style={{
+              position: 'fixed',
+              top: '16px',
+              right: '16px',
+              background: 'rgba(52, 199, 89, 0.15)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: '#16a34a',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              zIndex: 9999,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(52, 199, 89, 0.2)',
+              maxWidth: '280px',
+              minWidth: '120px',
+              animation: 'slideInFromRight 0.5s ease-out forwards, fadeOut 0.5s ease-in 2.5s forwards'
+            }}>
+              {success}
+            </div>
           )}
 
           <AddProjectRow
@@ -518,8 +573,7 @@ export default function MainPage() {
             groupedProjectActivities={groupedProjectActivities}
             onCellChange={handleCellChange}
             saving={saving}
-            onSubmitWeek={submitWeek}
-          />
+            onSubmitWeek={submitWeek} orderedProjectActivities={[]}          />
         </div>
       </div>
     </div>
