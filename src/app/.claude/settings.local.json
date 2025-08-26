@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Read(//mnt/c/Users/Ajay/OneDrive/Pictures/Screenshots/**)"
     ],
     "deny": [],
     "ask": []
