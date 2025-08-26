@@ -287,12 +287,13 @@ export default function AdminProjects() {
               </div>
 
               <div className="form-group">
-                <label>
+                <label className="inline-checkbox">
                   <input
                     type="checkbox"
                     checked={formData.billable}
                     onChange={(e) => setFormData({ ...formData, billable: e.target.checked })}
-                  /> Billable Project
+                  />
+                  Billable Project
                 </label>
               </div>
 

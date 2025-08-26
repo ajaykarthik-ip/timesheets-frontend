@@ -27,7 +27,8 @@ export default function UserSidebar({ user: propUser, isAdmin }: UserSidebarProp
         name: authUser.full_name,
         id: authUser.id.toString(),
         department: authUser.company,
-        role: authUser.designation
+        role: authUser.designation,
+        email: authUser.email
       };
     } else if (propUser) {
       return {
@@ -59,10 +60,14 @@ export default function UserSidebar({ user: propUser, isAdmin }: UserSidebarProp
   return (
     <div className="sidebar">
       <div className="sidebar-content">
-        <div>
-          <h2>Mobiux - Timesheet</h2>
-         
-          
+        <h2>Mobiux - Timesheet</h2>
+
+        <div className="user-info">
+          <p className="user-name">Welcome, {userData.name}</p>
+          <p className="user-email">logged in as : {userData.email}</p>
+        </div>
+
+        <div>     
           {hasAdminAccess() && (
             <button 
               className="admin-btn" 

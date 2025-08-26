@@ -149,3 +149,21 @@ button,
   -ms-user-select: none;
   user-select: none;
 }
+
+/* User info in sidebar */
+.user-info {
+  padding: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
+
+.user-email {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.7);
+}
