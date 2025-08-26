@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../utils/api';
+import { User } from '../../utils/api';
 
 // Types
 interface Project {
