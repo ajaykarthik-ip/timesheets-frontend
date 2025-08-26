@@ -8,6 +8,14 @@ import LogoutButton from '../components/LogoutButton';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
+interface UserInfo {
+  user_name: string;
+  email: string;
+  designation: string;
+  is_admin: boolean;
+  is_staff: boolean;
+}
+
 const makeAPICall = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('access_token');
   
@@ -30,7 +38,7 @@ export default function AdminLayout({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -44,7 +52,7 @@ export default function AdminLayout({
         const response = await makeAPICall(`${API_BASE}/timesheets/user-info/`);
         
         if (response.ok) {
-          const userData = await response.json();
+          const userData: UserInfo = await response.json();
 
           const hasAdminAccess = 
             userData.designation === 'manager' || 

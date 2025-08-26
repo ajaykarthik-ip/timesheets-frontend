@@ -9,7 +9,6 @@ interface Project {
   name: string;
 }
 
-
 interface TimesheetEntry {
   id: number;
   user: number;
@@ -112,15 +111,10 @@ export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [projectData, setProjectData] = useState<ProjectTimesheetSummary | null>(null);
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
-  const [topUsers, setTopUsers] = useState<TopUser[]>([]);
-  const [topProjects, setTopProjects] = useState<TopProject[]>([]);
-  const [allTimesheets, setAllTimesheets] = useState<TimesheetEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [activeTab, setActiveTab] = useState<'overview' | 'project-summary'>('overview');
 
   // Default date range = current month
   useEffect(() => {
@@ -162,41 +156,6 @@ export default function AdminDashboard() {
       setError("Failed to load projects");
     }
   }, []);
-
-  // NEW: Fetch all timesheets with dashboard stats
-  const fetchAllTimesheets = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const params = new URLSearchParams();
-      if (dateFrom) params.append('date_from', dateFrom);
-      if (dateTo) params.append('date_to', dateTo);
-      params.append('page_size', '500'); // Get more data for admin
-
-      const response = await makeAPICall(`${API_BASE}/timesheets/all/?${params}`);
-
-      if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error("You don't have permission to view all timesheets");
-        }
-        throw new Error("Failed to fetch timesheets");
-      }
-
-      const data: AllTimesheetsResponse = await response.json();
-      
-      setAllTimesheets(data.timesheets);
-      setDashboardStats(data.dashboard_stats);
-      setTopUsers(data.top_users);
-      setTopProjects(data.top_projects);
-      
-    } catch (err: any) {
-      setError(err.message || "Failed to load dashboard data");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [dateFrom, dateTo]);
 
   // Fetch project-specific timesheets for detailed view
   const fetchProjectTimesheets = useCallback(async () => {
@@ -285,13 +244,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
-
-  // Fetch all timesheets when date range changes or on load
-  useEffect(() => {
-    if (dateFrom && dateTo) {
-      fetchAllTimesheets();
-    }
-  }, [dateFrom, dateTo, fetchAllTimesheets]);
 
   // Fetch project-specific data when project is selected
   useEffect(() => {
