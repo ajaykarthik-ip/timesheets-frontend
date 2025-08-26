@@ -511,6 +511,7 @@ export default function MainPage() {
             onNavigateWeek={navigateWeek}
           />
 
+
           {/* Floating Toast Notifications */}
           {error && (
             <div style={{
