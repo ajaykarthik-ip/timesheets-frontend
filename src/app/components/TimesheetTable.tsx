@@ -35,7 +35,8 @@ export default function TimesheetTable({
   onSubmitWeek
 }: TimesheetTableProps) {
   const [editingCell, setEditingCell] = useState<{project: string, activity: string, date: string} | null>(null);
-  const [cellValues, setCellValues] = useState<{[key: string]: string}>({});
+  // Removed unused setCellValues
+  const [cellValues] = useState<{[key: string]: string}>({});
 
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const hasData = orderedProjectActivities.length > 0 || Object.keys(tableData).length > 0;
@@ -225,7 +226,7 @@ export default function TimesheetTable({
                   color: 'rgba(255, 255, 255, 0.6)',
                   fontStyle: 'italic'
                 }}>
-                  No timesheets for this week. Click "Add Project Activity" to get started.
+                  No timesheets for this week. Click &quot;Add Project Activity&quot; to get started.
                 </td>
               </tr>
             ) : (
@@ -265,7 +266,7 @@ export default function TimesheetTable({
                         const statusClass = getCellStatusClass(projectName, activityType, date);
                         const isEditable = isCellEditable(projectName, activityType, date);
                         
-                        let cellStyle: React.CSSProperties = {
+                        const cellStyle: React.CSSProperties = {
                           width: '80px',
                           padding: '6px',
                           borderRadius: '4px',

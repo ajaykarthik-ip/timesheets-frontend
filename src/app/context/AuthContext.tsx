@@ -66,7 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
-      } catch (error) {
+      } catch {
+        // Removed unused error variable
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
       } finally {

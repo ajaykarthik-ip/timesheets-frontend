@@ -27,7 +27,8 @@ export default function LoginPage() {
       } else {
         setError(result.error || 'Login failed');
       }
-    } catch (err) {
+    } catch {
+      // Removed unused err variable
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -93,7 +94,7 @@ export default function LoginPage() {
 
         <div className="auth-links">
           <p>
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register">Create one here</Link>
           </p>
         </div>
