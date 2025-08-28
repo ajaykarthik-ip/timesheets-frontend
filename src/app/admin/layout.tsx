@@ -116,7 +116,7 @@ export default function AdminLayout({
             <p><strong>Email:</strong> {currentUser.email}</p>
             <p><strong>Role:</strong> {currentUser.designation}</p>
             <p><strong>Admin:</strong> {currentUser.is_admin ? 'Yes' : 'No'}</p>
-            <p><strong>Staff:</strong> {currentUser.is_staff ? 'Yes' : 'No'}</p>
+            {/* <p><strong>Staff:</strong> {currentUser.is_staff ? 'Yes' : 'No'}</p> */}
           </div>
         )}
 
