@@ -28,6 +28,13 @@ export interface Project {
   name: string;
 }
 
+interface AssignedProject {
+  id: number;
+  name: string;
+  billable: boolean;
+  status: string;
+}
+
 // Constants
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -127,7 +134,7 @@ export const loadProjects = async (): Promise<Project[]> => {
   
   const data = await response.json();
   
-  return data.assigned_projects?.map((project: any) => ({
+  return data.assigned_projects?.map((project: AssignedProject) => ({
     id: project.id,
     name: project.name,
     billable: project.billable,
