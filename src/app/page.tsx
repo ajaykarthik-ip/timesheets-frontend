@@ -120,7 +120,7 @@ export default function MainPage() {
         try {
           const userData = await loadUserData();
           setUser(userData);
-        } catch (_) {
+        } catch  {
           window.location.href = '/login';
           return;
         }
@@ -140,7 +140,7 @@ export default function MainPage() {
         setTimesheets(timesheetData.value);
       }
 
-    } catch (_) {
+    } catch {
       showNotification('Failed to load data. Please try refreshing the page.', 'error');
     } finally {
       setLoading(false);

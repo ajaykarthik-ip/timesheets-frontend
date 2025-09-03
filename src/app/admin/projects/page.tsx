@@ -122,9 +122,8 @@ export default function AdminProjects() {
       );
       
       setProjects(projectsWithAssignments);
-    } catch (err) {
+    } catch {
       setError('Failed to load projects');
-      console.error(err);
     }
   }, []);
 
