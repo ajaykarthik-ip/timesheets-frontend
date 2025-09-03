@@ -196,7 +196,7 @@ export default function AdminProjects() {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to update assignments');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to update assignments');
     } finally {
       setAssignmentLoading(false);
