@@ -50,7 +50,7 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
+          <div className="auth-field">
             <label htmlFor="email">Email Address</label>
             <input
               type="email"
@@ -63,7 +63,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-field">
             <label htmlFor="password">Password</label>
             <input
               type="password"

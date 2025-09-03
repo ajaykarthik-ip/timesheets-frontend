@@ -24,6 +24,8 @@ interface UserFormData {
   designation: string;
   company?: string;
   password?: string;
+  new_password?: string;
+  confirm_password?: string;
   is_active: boolean;
   is_staff: boolean;
   is_admin: boolean;
@@ -55,6 +57,7 @@ export default function AdminUsers() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const [formData, setFormData] = useState<UserFormData>({
     email: '',
@@ -63,6 +66,8 @@ export default function AdminUsers() {
     designation: 'employee',
     company: 'Mobiux',
     password: '',
+    new_password: '',
+    confirm_password: '',
     is_active: true,
     is_staff: false,
     is_admin: false,
@@ -145,34 +150,97 @@ export default function AdminUsers() {
       user.designation?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  //  CORRECTED: Form submit with proper endpoints
+  // Form submit for user creation/update
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
+    // Password validation for editing users
+    if (editingUser && showPasswordFields) {
+      if (formData.new_password !== formData.confirm_password) {
+        setError('Passwords do not match');
+        return;
+      }
+      if (formData.new_password && formData.new_password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return;
+      }
+    }
+
     try {
       if (editingUser) {
-        // UPDATE USER - Use PUT to /users/{id}/update/
-        const response = await makeAPICall(
-          `${API_BASE}/auth/users/${editingUser.id}/update/`,
-          {
-            method: 'PUT',
-            body: JSON.stringify(formData),
-          }
-        );
+        // UPDATE USER
+        if (showPasswordFields && formData.new_password) {
+          // First update user details
+          const response = await makeAPICall(
+            `${API_BASE}/auth/users/${editingUser.id}/update/`,
+            {
+              method: 'PUT',
+              body: JSON.stringify({
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                designation: formData.designation,
+                company: formData.company,
+                is_active: formData.is_active,
+                is_staff: formData.is_staff,
+                is_admin: formData.is_admin,
+              }),
+            }
+          );
 
-        if (response.ok) {
-          setSuccess('User updated successfully');
-          fetchUsers();
-          resetForm();
+          if (response.ok) {
+            // Then update password
+            const passwordResponse = await makeAPICall(
+              `${API_BASE}/auth/users/${editingUser.id}/reset-password/`,
+              {
+                method: 'POST',
+                body: JSON.stringify({ 
+                  new_password: formData.new_password 
+                }),
+              }
+            );
+
+            if (passwordResponse.ok) {
+              setSuccess('User and password updated successfully');
+            } else {
+              setSuccess('User updated successfully, but password update failed');
+            }
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
+          }
         } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update user');
+          // Update user without password change
+          const response = await makeAPICall(
+            `${API_BASE}/auth/users/${editingUser.id}/update/`,
+            {
+              method: 'PUT',
+              body: JSON.stringify({
+                first_name: formData.first_name,
+                last_name: formData.last_name,
+                designation: formData.designation,
+                company: formData.company,
+                is_active: formData.is_active,
+                is_staff: formData.is_staff,
+                is_admin: formData.is_admin,
+              }),
+            }
+          );
+
+          if (response.ok) {
+            setSuccess('User updated successfully');
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update user');
+          }
         }
+        
+        fetchUsers();
+        resetForm();
       } else {
-        // CREATE USER - Use POST to /users/create/
-        const response = await makeAPICall(`${API_BASE}/auth/users/create/`, {
+        // CREATE USER
+        const response = await makeAPICall(`${API_BASE}/auth/users/`, {
           method: 'POST',
           body: JSON.stringify(formData),
         });
@@ -195,7 +263,7 @@ export default function AdminUsers() {
     }
   };
 
-  // Reset form
+  // Reset main form
   const resetForm = () => {
     setFormData({
       email: '',
@@ -204,15 +272,18 @@ export default function AdminUsers() {
       designation: 'employee',
       company: 'Mobiux',
       password: '',
+      new_password: '',
+      confirm_password: '',
       is_active: true,
       is_staff: false,
       is_admin: false,
     });
     setShowForm(false);
     setEditingUser(null);
+    setShowPasswordFields(false);
   };
 
-  // Handle edit
+  // Handle edit user
   const handleEdit = (user: User) => {
     setEditingUser(user);
     setFormData({
@@ -222,16 +293,19 @@ export default function AdminUsers() {
       designation: user.designation,
       company: user.company,
       password: '', // Don't populate password for edit
+      new_password: '',
+      confirm_password: '',
       is_active: user.is_active,
       is_staff: user.is_staff,
       is_admin: user.is_admin,
     });
     setShowForm(true);
+    setShowPasswordFields(false);
     setError('');
     setSuccess('');
   };
 
-  //  CORRECTED: Delete user using proper endpoint
+  // Delete user
   const handleDelete = async (user: User) => {
     if (user.id === currentUser?.id) {
       setError('Cannot delete your own account');
@@ -243,7 +317,6 @@ export default function AdminUsers() {
     }
 
     try {
-      // DELETE USER - Use DELETE to /users/{id}/delete/
       const response = await makeAPICall(
         `${API_BASE}/auth/users/${user.id}/delete/`,
         { method: 'DELETE' }
@@ -264,7 +337,7 @@ export default function AdminUsers() {
     }
   };
 
-  //  ADDED: Toggle user status (if you want to implement this)
+  // Toggle user status
   const handleToggleStatus = async (user: User) => {
     const action = user.is_active ? 'deactivate' : 'activate';
     
@@ -273,7 +346,6 @@ export default function AdminUsers() {
     }
 
     try {
-      // Update user status using the update endpoint
       const response = await makeAPICall(
         `${API_BASE}/auth/users/${user.id}/update/`,
         {
@@ -331,9 +403,8 @@ export default function AdminUsers() {
               <th>Email</th>
               <th>Designation</th>
               <th>Company</th>
-              <th>Status</th>
-              <th>Admin</th>
-              <th>Last Login</th>
+              {/* <th>Status</th> */}
+              {/* <th>Admin</th> */}
               <th>Actions</th>
             </tr>
           </thead>
@@ -348,7 +419,7 @@ export default function AdminUsers() {
                   </span>
                 </td>
                 <td>{user.company}</td>
-                <td>
+                {/* <td>
                   <span
                     className={`status-badge ${
                       user.is_active ? 'status-active' : 'status-inactive'
@@ -356,8 +427,8 @@ export default function AdminUsers() {
                   >
                     {user.is_active ? 'ACTIVE' : 'INACTIVE'}
                   </span>
-                </td>
-                <td>
+                </td> */}
+                {/* <td>
                   <span
                     className={`status-badge ${
                       user.is_admin
@@ -369,15 +440,11 @@ export default function AdminUsers() {
                   >
                     {user.is_admin ? 'ADMIN' : user.is_staff ? 'STAFF' : 'USER'}
                   </span>
-                </td>
-                <td className="last-login">
-                  {user.last_login
-                    ? new Date(user.last_login).toLocaleDateString()
-                    : 'Never'}
-                </td>
+                </td> */}
+
                 <td>
                   <button
-                    className="btn btn-warning mr-4"
+                    className="btn btn-warning mr-2"
                     onClick={() => handleEdit(user)}
                   >
                     Edit
@@ -385,7 +452,7 @@ export default function AdminUsers() {
                   <button
                     className={`btn ${
                       user.is_active ? 'btn-danger' : 'btn-success'
-                    } mr-4`}
+                    } mr-2`}
                     onClick={() => handleToggleStatus(user)}
                     disabled={user.id === currentUser?.id}
                   >
@@ -416,6 +483,7 @@ export default function AdminUsers() {
         </div>
       )}
 
+      {/* Main User Form Modal with Integrated Password Fields */}
       {showForm && (
         <div className="modal">
           <div className="modal-content">
@@ -553,11 +621,84 @@ export default function AdminUsers() {
                 </div>
               </div>
 
+              {/* Password Change Section - Only show when editing */}
+              {editingUser && (
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={showPasswordFields}
+                      onChange={(e) => {
+                        setShowPasswordFields(e.target.checked);
+                        if (!e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            new_password: '',
+                            confirm_password: '',
+                          });
+                        }
+                      }}
+                    />
+                    Change Password
+                  </label>
+                </div>
+              )}
+
+              {/* Password Fields - Only show when checkbox is checked */}
+              {editingUser && showPasswordFields && (
+                <>
+                  <div className="form-group">
+                    <label>New Password *</label>
+                    <input
+                      type="password"
+                      required={showPasswordFields}
+                      value={formData.new_password || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, new_password: e.target.value })
+                      }
+                      placeholder="Enter new password (min 8 characters)"
+                      minLength={8}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Confirm New Password *</label>
+                    <input
+                      type="password"
+                      required={showPasswordFields}
+                      value={formData.confirm_password || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, confirm_password: e.target.value })
+                      }
+                      placeholder="Confirm new password"
+                      minLength={8}
+                    />
+                  </div>
+
+                  {formData.new_password !== formData.confirm_password && 
+                   formData.confirm_password && formData.confirm_password.length > 0 && (
+                    <div className="alert alert-error">
+                      Passwords do not match
+                    </div>
+                  )}
+                </>
+              )}
+
               <div className="form-actions">
                 <button type="button" className="btn" onClick={resetForm}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={
+                    !!(
+                      editingUser && 
+                      showPasswordFields && 
+                      (formData.new_password !== formData.confirm_password || !formData.new_password)
+                    )
+                  }
+                >
                   {editingUser ? 'Update' : 'Create'} User
                 </button>
               </div>

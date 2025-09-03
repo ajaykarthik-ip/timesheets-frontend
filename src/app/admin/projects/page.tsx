@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../../utils/api';
 
 // Types
+interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  is_active: boolean;
+}
+
 interface Project {
   id: number;
   name: string;
@@ -13,6 +21,11 @@ interface Project {
   activity_types_display: string[];
   created_at: string;
   updated_at: string;
+}
+
+interface ProjectWithAssignments extends Project {
+  assigned_users_count?: number;
+  assigned_users?: User[];
 }
 
 interface ProjectChoices {
@@ -36,7 +49,8 @@ const makeAPICall = async (url: string, options: RequestInit = {}) => {
 };
 
 export default function AdminProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithAssignments[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [choices, setChoices] = useState<ProjectChoices>({ 
     statuses: {
       'active': 'Active',
@@ -47,10 +61,14 @@ export default function AdminProjects() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<ProjectWithAssignments | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [, setCurrentUser] = useState<User | null>(null);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedProjectForAssignment, setSelectedProjectForAssignment] = useState<ProjectWithAssignments | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [assignmentLoading, setAssignmentLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -59,13 +77,51 @@ export default function AdminProjects() {
     activity_types_list: [] as string[]
   });
 
-  // Fetch projects
+  // Fetch all users
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await makeAPICall(`${API_BASE}/accounts/users/`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  }, []);
+
+  // Fetch projects with assignment data
   const fetchProjects = useCallback(async () => {
     try {
       const response = await makeAPICall(`${API_BASE}/projects/`);
       if (!response.ok) throw new Error('Failed to fetch projects');
       const data = await response.json();
-      setProjects(data.projects || []);
+      
+      // Fetch assignment data for each project
+      const projectsWithAssignments = await Promise.all(
+        (data.projects || []).map(async (project: Project) => {
+          try {
+            const assignmentResponse = await makeAPICall(`${API_BASE}/projects/${project.id}/assignments/`);
+            if (assignmentResponse.ok) {
+              const assignmentData = await assignmentResponse.json();
+              return {
+                ...project,
+                assigned_users_count: assignmentData.assigned_users?.length || 0,
+                assigned_users: assignmentData.assigned_users || []
+              };
+            }
+          } catch (error) {
+            console.error(`Failed to fetch assignments for project ${project.id}:`, error);
+          }
+          return {
+            ...project,
+            assigned_users_count: 0,
+            assigned_users: []
+          };
+        })
+      );
+      
+      setProjects(projectsWithAssignments);
     } catch (err) {
       setError('Failed to load projects');
       console.error(err);
@@ -89,31 +145,83 @@ export default function AdminProjects() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchProjects(), fetchChoices()]);
+      await Promise.all([fetchProjects(), fetchChoices(), fetchUsers()]);
       setLoading(false);
     };
     loadData();
-  }, [fetchProjects, fetchChoices]);
+  }, [fetchProjects, fetchChoices, fetchUsers]);
 
-  // Load current user
+  // Clear messages after 5 seconds
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const response = await makeAPICall(`${API_BASE}/timesheets/user-info/`);
-        if (response.ok) {
-          const userData = await response.json();
-          setCurrentUser(userData);
-        }
-      } catch (error) {
-        console.error('Failed to load user info:', error);
-      }
-    };
-    loadUser();
-  }, []);
+    if (error || success) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Handle assignment modal
+  const handleAssignUsers = (project: ProjectWithAssignments) => {
+    setSelectedProjectForAssignment(project);
+    setSelectedUserIds(project.assigned_users?.map(u => u.id) || []);
+    setShowAssignmentModal(true);
+  };
+
+  // Save user assignments
+  const handleSaveAssignments = async () => {
+    if (!selectedProjectForAssignment) return;
+
+    setAssignmentLoading(true);
+    try {
+      const response = await makeAPICall(`${API_BASE}/projects/${selectedProjectForAssignment.id}/assign-users/`, {
+        method: 'POST',
+        body: JSON.stringify({
+          user_ids: selectedUserIds
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(data.message || 'User assignments updated successfully');
+        await fetchProjects(); // Refresh projects
+        setShowAssignmentModal(false);
+        setSelectedProjectForAssignment(null);
+        setSelectedUserIds([]);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to update assignments');
+      }
+    } catch (err) {
+      setError('Failed to update assignments');
+    } finally {
+      setAssignmentLoading(false);
+    }
+  };
+
+  // Toggle user selection
+  const toggleUserSelection = (userId: number) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  // Select/Deselect all users
+  const handleSelectAll = () => {
+    const activeUsers = users.filter(user => user.is_active);
+    if (selectedUserIds.length === activeUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(activeUsers.map(user => user.id));
+    }
+  };
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,6 +247,8 @@ export default function AdminProjects() {
         throw new Error(errorData.error || 'Failed to save project');
       }
 
+      const data = await response.json();
+      setSuccess(data.message || `Project ${editingProject ? 'updated' : 'created'} successfully`);
       await fetchProjects();
       resetForm();
     } catch (err) {
@@ -158,7 +268,7 @@ export default function AdminProjects() {
     setError('');
   };
 
-  const handleEdit = (project: Project) => {
+  const handleEdit = (project: ProjectWithAssignments) => {
     setEditingProject(project);
     setFormData({
       name: project.name,
@@ -169,14 +279,15 @@ export default function AdminProjects() {
     setShowForm(true);
   };
 
-  const handleDelete = async (project: Project) => {
-    if (!confirm(`Delete ${project.name}?`)) return;
+  const handleDelete = async (project: ProjectWithAssignments) => {
+    if (!confirm(`Delete ${project.name}? This will also remove all user assignments.`)) return;
 
     try {
       const response = await makeAPICall(`${API_BASE}/projects/${project.id}/`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete project');
+      setSuccess('Project deleted successfully');
       await fetchProjects();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete');
@@ -204,6 +315,7 @@ export default function AdminProjects() {
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
       <div className="actions">
         <input
@@ -225,6 +337,7 @@ export default function AdminProjects() {
             <th>Billable</th>
             <th>Status</th>
             <th>Activity Types</th>
+            <th>Assigned Users</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -243,6 +356,20 @@ export default function AdminProjects() {
                 </span>
               </td>
               <td>{project.activity_types_display?.length ? project.activity_types_display.join(', ') : 'No activities defined'}</td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="status-badge status-active">
+                    {project.assigned_users_count || 0} users
+                  </span>
+                  <button 
+                    className="btn btn-primary btn-small" 
+                    onClick={() => handleAssignUsers(project)}
+                    title="Manage user assignments"
+                  >
+                    Manage
+                  </button>
+                </div>
+              </td>
               <td>
                 <button className="btn btn-warning" onClick={() => handleEdit(project)}>Edit</button>
                 <button className="btn btn-danger" onClick={() => handleDelete(project)}>Delete</button>
@@ -348,6 +475,87 @@ export default function AdminProjects() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Assignment Modal */}
+      {showAssignmentModal && selectedProjectForAssignment && (
+        <div className="modal">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Manage User Assignments - {selectedProjectForAssignment.name}</h2>
+              <button className="close-btn" onClick={() => setShowAssignmentModal(false)}>×</button>
+            </div>
+            
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: 0 }}>
+                  Select users who can log time for this project:
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  onClick={handleSelectAll}
+                >
+                  {selectedUserIds.length === users.filter(u => u.is_active).length ? 'Deselect All' : 'Select All'}
+                </button>
+              </div>
+              
+              <div style={{ 
+                maxHeight: '300px', 
+                overflowY: 'auto',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '6px',
+                padding: '8px',
+                background: 'rgba(255, 255, 255, 0.02)'
+              }}>
+                {users.filter(user => user.is_active).map(user => (
+                  <label key={user.id} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={() => toggleUserSelection(user.id)}
+                    />
+                    {user.full_name} ({user.email})
+                  </label>
+                ))}
+                
+                {users.filter(user => user.is_active).length === 0 && (
+                  <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)', margin: '16px 0' }}>
+                    No active users found
+                  </p>
+                )}
+              </div>
+              
+              <p style={{ 
+                marginTop: '8px', 
+                fontSize: '11px', 
+                color: 'rgba(255, 255, 255, 0.6)',
+                margin: '8px 0 0 0'
+              }}>
+                Selected: {selectedUserIds.length} of {users.filter(u => u.is_active).length} active users
+              </p>
+            </div>
+
+            <div className="form-actions">
+              <button 
+                type="button" 
+                className="btn" 
+                onClick={() => setShowAssignmentModal(false)}
+                disabled={assignmentLoading}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={handleSaveAssignments}
+                disabled={assignmentLoading}
+              >
+                {assignmentLoading ? 'Saving...' : 'Save Assignments'}
+              </button>
+            </div>
           </div>
         </div>
       )}

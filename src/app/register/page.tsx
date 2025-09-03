@@ -130,8 +130,8 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-row">
-            <div className="form-group">
+          <div>
+            <div className="auth-field">
               <label htmlFor="first_name">First Name</label>
               <input
                 type="text"
@@ -144,7 +144,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <div className="form-group">
+            <div className="auth-field">
               <label htmlFor="last_name">Last Name</label>
               <input
                 type="text"
@@ -158,7 +158,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="auth-field">
             <label htmlFor="email">Email Address</label>
             <input
               type="email"
@@ -171,7 +171,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-field">
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -185,7 +185,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="auth-field">
             <label htmlFor="password_confirm">Confirm Password</label>
             <input
               type="password"

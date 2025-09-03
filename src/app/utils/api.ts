@@ -119,12 +119,20 @@ export const loadUserData = async (): Promise<User> => {
 };
 
 export const loadProjects = async (): Promise<Project[]> => {
-  const projectsResponse = await makeAPICall(`${API_BASE}/projects/active/`);
-  if (projectsResponse.ok) {
-    const projectData = await projectsResponse.json();
-    return projectData.projects || [];
+  const response = await makeAPICall(`${API_BASE}/accounts/my-projects/`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to load assigned projects');
   }
-  return [];
+  
+  const data = await response.json();
+  
+  return data.assigned_projects?.map((project: any) => ({
+    id: project.id,
+    name: project.name,
+    billable: project.billable,
+    status: project.status
+  })) || [];
 };
 
 export const loadTimesheets = async (dateFrom: string, dateTo: string): Promise<Timesheet[]> => {
