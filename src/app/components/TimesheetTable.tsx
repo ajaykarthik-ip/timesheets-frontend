@@ -42,22 +42,22 @@ export default function TimesheetTable({
   const hasData = orderedProjectActivities.length > 0 || Object.keys(tableData).length > 0;
 
   // To get timesheet for a specific cell
-  const getTimesheet = (projectName: string, activityType: string, date: string): Timesheet | null => {
+  const getTimesheet = useCallback((projectName: string, activityType: string, date: string): Timesheet | null => {
     return timesheets.find(ts =>
       ts.project_name === projectName &&
       ts.activity_type === activityType &&
       ts.date === date
     ) || null;
-  };
+  }, [timesheets]);
 
   // To get the original saved value from tableData
-  const getSavedValue = (projectName: string, activityType: string, date: string): string => {
+  const getSavedValue = useCallback((projectName: string, activityType: string, date: string): string => {
     const tableKey = `${projectName}-${activityType}`;
     return tableData[tableKey]?.[date] || '';
-  };
+  }, [tableData]);
 
   // To get current display value (editing value or saved value)
-  const getCurrentValue = (projectName: string, activityType: string, date: string): string => {
+  const getCurrentValue = useCallback((projectName: string, activityType: string, date: string): string => {
     const cellKey = `${projectName}-${activityType}-${date}`;
     
     // If user is currently editing this cell, show the editing value
@@ -67,20 +67,20 @@ export default function TimesheetTable({
     
     // Otherwise show the saved value
     return getSavedValue(projectName, activityType, date);
-  };
+  }, [editingValues, getSavedValue]);
 
   // Helper function to check if cell has been modified but not saved
-  const isModified = (projectName: string, activityType: string, date: string): boolean => {
+  const isModified = useCallback((projectName: string, activityType: string, date: string): boolean => {
     const cellKey = `${projectName}-${activityType}-${date}`;
     if (!editingValues.hasOwnProperty(cellKey)) return false;
     
     const editingValue = editingValues[cellKey];
     const savedValue = getSavedValue(projectName, activityType, date);
     return editingValue !== savedValue;
-  };
+  }, [editingValues, getSavedValue]);
 
   // To get cell status for display
-  const getCellStatus = (projectName: string, activityType: string, date: string) => {
+  const getCellStatus = useCallback((projectName: string, activityType: string, date: string) => {
     const timesheet = getTimesheet(projectName, activityType, date);
     const currentValue = getCurrentValue(projectName, activityType, date);
     const cellKey = `${projectName}-${activityType}-${date}`;
@@ -112,7 +112,7 @@ export default function TimesheetTable({
     
     // If value exists but no timesheet, it might be unsaved from previous session
     return 'unsaved';
-  };
+  }, [getTimesheet, getCurrentValue, currentlySaving, isModified]);
 
   // Helper function to get CSS class for cell status
   const getCellStatusClass = (status: string) => {
@@ -133,10 +133,10 @@ export default function TimesheetTable({
   };
 
   // Check if cell is editable
-  const isCellEditable = (projectName: string, activityType: string, date: string): boolean => {
+  const isCellEditable = useCallback((projectName: string, activityType: string, date: string): boolean => {
     const status = getCellStatus(projectName, activityType, date);
     return status !== 'submitted' && status !== 'saving';
-  };
+  }, [getCellStatus]);
 
   // Handle input change (only updates local editing state, NO SAVING)
   const handleInputChange = (projectName: string, activityType: string, date: string, value: string) => {
@@ -204,9 +204,8 @@ export default function TimesheetTable({
   }, [editingValues, onCellChange, getSavedValue]);
 
   // Handle Enter key to move to next cell 
-  const handleKeyPress = (e: React.KeyboardEvent, projectName: string, activityType: string, date: string) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === 'Tab') {
-
       (e.target as HTMLInputElement).blur();
     }
   };
@@ -419,7 +418,7 @@ export default function TimesheetTable({
                               onChange={(e) => handleInputChange(projectName, activityType, date, e.target.value)}
                               onFocus={() => handleInputFocus(projectName, activityType, date)}
                               onBlur={() => handleInputBlur(projectName, activityType, date)}
-                              onKeyDown={(e) => handleKeyPress(e, projectName, activityType, date)}
+                              onKeyDown={handleKeyPress}
                               disabled={!isEditable}
                               style={cellStyle}
                             />
