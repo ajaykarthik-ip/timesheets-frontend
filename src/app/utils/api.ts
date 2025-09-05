@@ -35,20 +35,23 @@ interface AssignedProject {
   status: string;
 }
 
+// Define interface for queued request items
+interface QueuedRequest {
+  resolve: (value: Response) => void;
+  reject: (error: Error) => void;
+  url: string;
+  options: RequestInit;
+}
+
 // Constants
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
 // Track if we're currently refreshing token to prevent multiple refresh attempts
 let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: Response) => void;
-  reject: (error: any) => void;
-  url: string;
-  options: RequestInit;
-}> = [];
+let failedQueue: QueuedRequest[] = [];
 
 // Process failed requests after token refresh
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject, url, options }) => {
     if (error) {
       reject(error);
@@ -147,12 +150,13 @@ export const makeAPICall = async (url: string, options: RequestInit = {}): Promi
       } catch (refreshError) {
         // Network or other error during refresh
         console.error('Token refresh error:', refreshError);
-        processQueue(refreshError, null);
+        const error = refreshError instanceof Error ? refreshError : new Error('Token refresh failed');
+        processQueue(error, null);
         isRefreshing = false;
         
         localStorage.clear();
         window.location.href = '/login';
-        throw refreshError;
+        throw error;
       }
     }
     
