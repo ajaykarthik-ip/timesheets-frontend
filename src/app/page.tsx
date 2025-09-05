@@ -104,7 +104,7 @@ export default function MainPage() {
     }, 0);
   }, [tableData]);
 
-  // Data loading
+  // Data loading with proper error handling
   const loadData = useCallback(async () => {
     setLoading(true);
     
@@ -115,13 +115,19 @@ export default function MainPage() {
         return;
       }
 
-      // Load user data
+      // Load user data with better error handling
       if (!user) {
         try {
           const userData = await loadUserData();
           setUser(userData);
-        } catch  {
-          window.location.href = '/login';
+        } catch (error) {
+          console.error('User load error:', error);
+          // Let the API utility handle authentication redirects
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          if (errorMessage.includes('Authentication')) {
+            return; // API utility will handle redirect
+          }
+          showNotification('Failed to load user data', 'error');
           return;
         }
       }
@@ -134,14 +140,22 @@ export default function MainPage() {
 
       if (projectData.status === 'fulfilled') {
         setProjects(projectData.value);
+      } else {
+        console.error('Failed to load projects:', projectData.reason);
       }
 
       if (timesheetData.status === 'fulfilled') {
         setTimesheets(timesheetData.value);
+      } else {
+        console.error('Failed to load timesheets:', timesheetData.reason);
       }
 
-    } catch {
-      showNotification('Failed to load data. Please try refreshing the page.', 'error');
+    } catch (error) {
+      console.error('Load data error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      if (!errorMessage.includes('Authentication')) {
+        showNotification('Failed to load data. Please try refreshing the page.', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -153,8 +167,21 @@ export default function MainPage() {
     const activitiesMap = new Map<string, string[]>();
 
     const activityPromises = projects.map(async (project) => {
-      const activities = await loadActivitiesForProject(project.id);
-      activitiesMap.set(project.name, activities);
+      try {
+        const activities = await loadActivitiesForProject(project.id);
+        activitiesMap.set(project.name, activities);
+      } catch (error) {
+        console.error(`Failed to load activities for project ${project.id}:`, error);
+        // Set default activities if loading fails
+        activitiesMap.set(project.name, [
+          'Development',
+          'Testing',
+          'Code Review',
+          'Bug Fixing',
+          'Meeting',
+          'Documentation'
+        ]);
+      }
     });
 
     await Promise.all(activityPromises);
@@ -225,7 +252,7 @@ export default function MainPage() {
     }
   }, [timesheets, weekDates, manuallyAddedRows, initializeTableData]);
 
-  // Event handlers
+  // Event handlers with proper error handling
   const handleCellChange = async (
     projectName: string,
     activityType: string,
@@ -297,7 +324,8 @@ export default function MainPage() {
         showNotification(`Failed to save: ${errorData?.error || 'Unknown error'}`, 'error');
       }
     } catch (error) {
-      showNotification('Save failed: ' + error, 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showNotification('Save failed: ' + errorMessage, 'error');
     }
   };
 
@@ -322,7 +350,8 @@ export default function MainPage() {
         }
       }
     } catch (error) {
-      showNotification('Delete failed: ' + error, 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showNotification('Delete failed: ' + errorMessage, 'error');
     }
   };
 
@@ -343,7 +372,6 @@ export default function MainPage() {
     
     showNotification(`Added ${projectName} - ${activityType} row`);
   };
-
 
   const submitWeek = async () => {
     const draftTimesheets = timesheets.filter(ts => ts.status === 'draft');
@@ -403,7 +431,8 @@ export default function MainPage() {
         showNotification(`Submission failed: ${data.error}`, 'error');
       }
     } catch (error) {
-      showNotification('Submission failed: ' + error, 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showNotification('Submission failed: ' + errorMessage, 'error');
     } finally {
       setSaving(false);
     }
@@ -479,8 +508,6 @@ export default function MainPage() {
             onNavigateWeek={navigateWeek}
           />
 
-
-          
           {/* Floating Toast Notifications */}
           {error && (
             <div style={{
@@ -543,7 +570,9 @@ export default function MainPage() {
             groupedProjectActivities={groupedProjectActivities}
             onCellChange={handleCellChange}
             saving={saving}
-            onSubmitWeek={submitWeek} orderedProjectActivities={[]}          />
+            onSubmitWeek={submitWeek} 
+            orderedProjectActivities={[]}          
+          />
         </div>
       </div>
     </div>

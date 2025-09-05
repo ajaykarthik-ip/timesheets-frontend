@@ -38,8 +38,37 @@ interface AssignedProject {
 // Constants
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
-// API utility function
-export const makeAPICall = async (url: string, options: RequestInit = {}) => {
+// Track if we're currently refreshing token to prevent multiple refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: Response) => void;
+  reject: (error: any) => void;
+  url: string;
+  options: RequestInit;
+}> = [];
+
+// Process failed requests after token refresh
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject, url, options }) => {
+    if (error) {
+      reject(error);
+    } else {
+      // Retry the original request with new token
+      fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Authorization': `Bearer ${token}`,
+        },
+      }).then(resolve).catch(reject);
+    }
+  });
+  
+  failedQueue = [];
+};
+
+// Enhanced API utility function with better token refresh handling
+export const makeAPICall = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = localStorage.getItem('access_token');
   
   const defaultOptions: RequestInit = {
@@ -61,67 +90,112 @@ export const makeAPICall = async (url: string, options: RequestInit = {}) => {
   try {
     const response = await fetch(url, mergedOptions);
     
+    // Handle 401 Unauthorized
     if (response.status === 401) {
       const refreshToken = localStorage.getItem('refresh_token');
-      if (refreshToken) {
-        try {
-          const refreshResponse = await fetch(`${API_BASE}/token/refresh/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh: refreshToken }),
-          });
-          
-          if (refreshResponse.ok) {
-            const { access } = await refreshResponse.json();
-            localStorage.setItem('access_token', access);
-            
-            return fetch(url, {
-              ...mergedOptions,
-              headers: {
-                ...mergedOptions.headers,
-                'Authorization': `Bearer ${access}`,
-              },
-            });
-          }
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
-        }
-      }
       
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      window.location.href = '/login';
-      return response;
+      if (!refreshToken) {
+        // No refresh token, redirect to login immediately
+        localStorage.clear();
+        window.location.href = '/login';
+        throw new Error('No refresh token available');
+      }
+
+      // If already refreshing, queue this request
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject, url, options: mergedOptions });
+        });
+      }
+
+      // Start refresh process
+      isRefreshing = true;
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE}/token/refresh/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+
+        if (refreshResponse.ok) {
+          const { access } = await refreshResponse.json();
+          localStorage.setItem('access_token', access);
+          
+          // Process queued requests with new token
+          processQueue(null, access);
+          isRefreshing = false;
+
+          // Retry original request with new token
+          return fetch(url, {
+            ...mergedOptions,
+            headers: {
+              ...mergedOptions.headers,
+              'Authorization': `Bearer ${access}`,
+            },
+          });
+        } else {
+          // Refresh failed, clear everything and redirect
+          const refreshError = new Error('Token refresh failed');
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          
+          localStorage.clear();
+          window.location.href = '/login';
+          throw refreshError;
+        }
+      } catch (refreshError) {
+        // Network or other error during refresh
+        console.error('Token refresh error:', refreshError);
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        
+        localStorage.clear();
+        window.location.href = '/login';
+        throw refreshError;
+      }
     }
     
     return response;
   } catch (error) {
     console.error(`API Error for ${url}:`, error);
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error - please check your connection');
+    }
+    
     throw error;
   }
 };
 
-// API functions
 export const loadUserData = async (): Promise<User> => {
-  const userResponse = await makeAPICall(`${API_BASE}/timesheets/user-info/`);
-  if (userResponse.ok) {
-    const userData = await userResponse.json();
+  try {
+    const userResponse = await makeAPICall(`${API_BASE}/timesheets/user-info/`);
     
-    return {
-      id: userData.user_id,
-      email: userData.email,
-      first_name: userData.user_name.split(' ')[0] || '',
-      last_name: userData.user_name.split(' ').slice(1).join(' ') || '',
-      designation: userData.designation,
-      company: userData.company,
-      is_active: userData.is_active,
-      is_staff: false,
-      is_admin: false,
-      full_name: userData.user_name,
-      role: userData.designation
-    };
-  } else {
-    throw new Error('Failed to load user data');
+    if (userResponse.ok) {
+      const userData = await userResponse.json();
+      
+      return {
+        id: userData.user_id,
+        email: userData.email,
+        first_name: userData.user_name.split(' ')[0] || '',
+        last_name: userData.user_name.split(' ').slice(1).join(' ') || '',
+        designation: userData.designation,
+        company: userData.company,
+        is_active: userData.is_active,
+        is_staff: false,
+        is_admin: false,
+        full_name: userData.user_name,
+        role: userData.designation
+      };
+    } else if (userResponse.status === 401) {
+      throw new Error('Authentication expired');
+    } else {
+      throw new Error(`Failed to load user data: ${userResponse.status}`);
+    }
+  } catch (error) {
+    console.error('Load user data error:', error);
+    throw error;
   }
 };
 
@@ -129,7 +203,7 @@ export const loadProjects = async (): Promise<Project[]> => {
   const response = await makeAPICall(`${API_BASE}/accounts/my-projects/`);
   
   if (!response.ok) {
-    throw new Error('Failed to load assigned projects');
+    throw new Error(`Failed to load assigned projects: ${response.status}`);
   }
   
   const data = await response.json();
@@ -151,7 +225,8 @@ export const loadTimesheets = async (dateFrom: string, dateTo: string): Promise<
     const timesheetData = await timesheetResponse.json();
     return timesheetData.timesheets || [];
   }
-  return [];
+  
+  throw new Error(`Failed to load timesheets: ${timesheetResponse.status}`);
 };
 
 export const loadActivitiesForProject = async (projectId: number): Promise<string[]> => {
@@ -234,7 +309,7 @@ export const submitWeekTimesheets = async (weekStartDate: string, forceSubmit: b
   );
 };
 
-// Date utilities
+// Date utilities (unchanged)
 export const formatDate = (date: Date): string => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

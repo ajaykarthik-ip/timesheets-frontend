@@ -251,15 +251,6 @@ export default function TimesheetTable({
           }}></div>
           <span>Empty</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{
-            width: '12px',
-            height: '12px',
-            background: 'rgba(255, 193, 7, 0.6)',
-            borderRadius: '2px'
-          }}></div>
-          <span>Modified (Not Saved)</span>
-        </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <div style={{
